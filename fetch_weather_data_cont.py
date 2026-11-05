@@ -8,8 +8,13 @@ from retry_requests import retry
 
 INTERVAL_SECONDS = 60
 
+# Things to fix:
+# - Code doesn't handle errors
+# - Time is in UTC, need to convert that
+# - OpenMeteo only updates current every 15 minutes, so all the values are just repeating..
+
 # Setup the Open-Meteo API client with cache and retry on error
-cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
+cache_session = requests_cache.CachedSession('.cache', expire_after = 0)
 retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
 openmeteo = openmeteo_requests.Client(session = retry_session)
 
@@ -38,6 +43,9 @@ def fetch_continuous_data():
         print("Starting continuous data collection...")
         
         while True:
+            responses = openmeteo.weather_api(url, params = params)
+            response = responses[0]
+
             current = response.Current()
             current_temperature_2m = current.Variables(0).Value()
             current_relative_humidity_2m = current.Variables(1).Value()
